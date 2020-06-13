@@ -48,6 +48,13 @@
             };
         }
 
+        public static void AddParameter(this SqlCommand commad, string ParamName, SqlDbType DbType, string inputValue, ParameterDirection paramDirection)
+        {
+            commad.Parameters.Add(new SqlParameter(ParamName, DbType));
+            commad.Parameters[ParamName].Value = inputValue;
+            commad.Parameters[ParamName].Direction = paramDirection;
+        }
+
         public static void AddParameter(this SqlCommand commad, string ParamName, SqlDbType DbType, string inputValue, int size = 0, ParameterDirection ParamDirection = ParameterDirection.Input)
         {
             if (size == 0)
@@ -61,6 +68,8 @@
             commad.Parameters[ParamName].Value = inputValue;
             commad.Parameters[ParamName].Direction = ParamDirection;
         }
+
+
 
         public static void AddCommonInputParams(this SqlCommand commad)
         {
@@ -86,6 +95,17 @@
             responseModel.ExecutionStatus = commad.Parameters["@return"]?.Value != DBNull.Value ? (int)commad.Parameters["@return"].Value : -1;
             responseModel.ErrorStatus = commad.Parameters["@errorID"]?.Value != DBNull.Value ? (int)commad.Parameters["@errorID"].Value : -1;
             responseModel.ErrorMessage = commad.Parameters["@errorMessage"]?.Value != DBNull.Value ? commad.Parameters["@errorMessage"].Value.ToString() : string.Empty;
+        }
+
+        public static T GetOutputParam<T>(this SqlCommand command, string paramName, T defaultValue)
+        {
+            return command.Parameters[paramName]?.Value != DBNull.Value ? (T)command.Parameters[paramName].Value : defaultValue;
+
+        }
+
+        public static T GetDbValue<T>(this IDataReader reader, string ColumnName, T defaultValue)
+        {
+            return reader.IsDBNull(reader.GetOrdinal(ColumnName)) ? defaultValue : (T)reader[reader.GetOrdinal(ColumnName)];
         }
 
         public static string GetDbStriing(this IDataReader reader, string ColumnName, string defaultValue = "")
