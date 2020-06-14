@@ -75,22 +75,30 @@
         {
             commad.Parameters.Add(new SqlParameter("@return", SqlDbType.Int));
             commad.Parameters["@return"].Value = DBNull.Value;
-            commad.Parameters["@return"].Direction = ParameterDirection.InputOutput;
+            commad.Parameters["@return"].Direction = ParameterDirection.Output;
 
             commad.Parameters.Add(new SqlParameter("@errorID", SqlDbType.Int));
             commad.Parameters["@errorID"].Value = DBNull.Value;
-            commad.Parameters["@errorID"].Direction = ParameterDirection.InputOutput;
+            commad.Parameters["@errorID"].Direction = ParameterDirection.Output;
 
             commad.Parameters.Add(new SqlParameter("@errorMessage", SqlDbType.VarChar, 2048));
             commad.Parameters["@errorMessage"].Value = DBNull.Value;
-            commad.Parameters["@errorMessage"].Direction = ParameterDirection.InputOutput;
+            commad.Parameters["@errorMessage"].Direction = ParameterDirection.Output;
         }
 
-        public static void GetCommonOutputParams(this SqlCommand commad, ResponseModel responseModel)
+        /// <summary>
+        /// Get Common Output Params from Sql Server.
+        /// </summary>
+        /// <param name="commad">Sqlcommand.</param>
+        /// <param name="responseModel">responseModel.</param>
+        /// <exception cref="NoNullAllowedException">Response Model cannot be null.</exception>
+        public static void GetCommonOutputParams(this SqlCommand commad,ResponseModel responseModel)
         {
             if (responseModel == null)
             {
-                responseModel = new ResponseModel();
+                //responseModel = new ResponseModel();
+
+                new Exception("ResponseModel cannot be null");
             }
             responseModel.ExecutionStatus = commad.Parameters["@return"]?.Value != DBNull.Value ? (int)commad.Parameters["@return"].Value : -1;
             responseModel.ErrorStatus = commad.Parameters["@errorID"]?.Value != DBNull.Value ? (int)commad.Parameters["@errorID"].Value : -1;
