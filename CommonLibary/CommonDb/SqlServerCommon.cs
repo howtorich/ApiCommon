@@ -112,7 +112,7 @@
 
         }
 
-        public static T GetDbValue<T>(this IDataReader reader, string ColumnName, T defaultValue)
+        public static T GetDbColValue<T>(this IDataReader reader, string ColumnName, T defaultValue)
         {
             if (DbColIndex.TryGetValue(ColumnName, out int colIndex))
             {
@@ -120,6 +120,11 @@
             }
 
             return defaultValue;
+        }
+
+        public static T GetDbValue<T>(this IDataReader reader, string ColumnName, T defaultValue)
+        {
+               return reader.IsDBNull(reader.GetOrdinal(ColumnName)) ? defaultValue : (T)reader[reader.GetOrdinal(ColumnName)];
         }
 
         public static string GetDbStriing(this IDataReader reader, string ColumnName, string defaultValue = "")
