@@ -2,6 +2,7 @@
 {
     using CommonLibary.CommonModels;
     using System;
+    using System.Collections.Generic;
     using System.Data;
     using System.Data.SqlClient;
 
@@ -10,6 +11,8 @@
         private static string HostName = "awsdatabase-1.cklc9dvnkg9x.ap-south-1.rds.amazonaws.com,1433";
         private static string DbUserName = "MainUser";
         private static string DbPassWord = "V4wearefour";
+
+        private static Dictionary<string, int> DbColIndex;
 
         public enum SqlServerDBs
         {
@@ -69,8 +72,6 @@
             commad.Parameters[ParamName].Direction = ParamDirection;
         }
 
-
-
         public static void AddCommonInputParams(this SqlCommand commad)
         {
             commad.Parameters.Add(new SqlParameter("@return", SqlDbType.Int));
@@ -92,7 +93,7 @@
         /// <param name="commad">Sqlcommand.</param>
         /// <param name="responseModel">responseModel.</param>
         /// <exception cref="NoNullAllowedException">Response Model cannot be null.</exception>
-        public static void GetCommonOutputParams(this SqlCommand commad,ResponseModel responseModel)
+        public static void GetCommonOutputParams(this SqlCommand commad, ResponseModel responseModel)
         {
             if (responseModel == null)
             {
@@ -113,7 +114,12 @@
 
         public static T GetDbValue<T>(this IDataReader reader, string ColumnName, T defaultValue)
         {
-            return reader.IsDBNull(reader.GetOrdinal(ColumnName)) ? defaultValue : (T)reader[reader.GetOrdinal(ColumnName)];
+            if (DbColIndex.TryGetValue(ColumnName, out int colIndex))
+            {
+                return reader.IsDBNull(colIndex) ? defaultValue : (T)reader[colIndex];
+            }
+
+            return defaultValue;
         }
 
         public static string GetDbStriing(this IDataReader reader, string ColumnName, string defaultValue = "")
@@ -149,6 +155,35 @@
         public static double GetDbInt64(this IDataReader reader, string ColumnName, double defaultValue = 0.0)
         {
             return reader.IsDBNull(reader.GetOrdinal(ColumnName)) ? defaultValue : reader.GetDouble(reader.GetOrdinal(ColumnName));
+        }
+
+        public static void AddCol(this IDataReader reader, string ColName)
+        {
+            if (DbColIndex == null)
+            {
+                DbColIndex = new Dictionary<string, int>();
+            }
+
+            DbColIndex.Add(ColName, reader.GetOrdinal(ColName));
+        }
+
+        public static void ConnectionDispose(this SqlCommand command)
+        {
+            if (DbColIndex != null)
+            {
+                DbColIndex.Clear();
+                DbColIndex = null;
+            }
+
+            command?.Connection?.Close();
+        }
+        public static void Dispose(this SqlCommand command)
+        {
+            if (DbColIndex != null)
+            {
+                DbColIndex.Clear();
+                DbColIndex = null;
+            }
         }
     }
 }
